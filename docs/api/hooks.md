@@ -309,6 +309,66 @@ export const CounterComponent = ({ value }) => {
 }
 ```
 
+## `createCustomHooks()`
+
+This utility function returns a set of hooks bound to a different context. You might use this to help manage a very complex reusable component, allowing it to coexist within a Redux application using its own store instance without colliding.
+
+```js
+import React from 'react'
+import { createCustomHooks, Provider } from 'react-redux'
+import createComponentStore, { increment } from './component-store'
+
+const customContext = React.createContext()
+const customStore = createComponentStore()
+
+const customHooks = createCustomHooks(customContext)
+
+const Increment = () => {
+  const dispatch = customHooks.useDispatch()
+  return (
+    <button onClick={() => dispatch(increment())}>+1</button>
+  )
+}
+
+const InternalCount = () => {
+  const count = customHooks.useSelector(s => s.count)
+  return (
+    <span>{String(count)}</span>
+  )
+}
+
+export const ReusableCounterComponent = () => {
+  return (
+    <Provider context={customContext} store={customStore}>
+      <div>
+        <Increment /> <InternalCount />
+      </div>
+    </Provider>
+  )
+}
+```
+
+## `createContextValue`
+
+This utility function allows you to use a singleton instance of your Redux store. This is useful in cases where your component will be reusable, but you want all instances to share the same store. For instance, this would be a great way to implement caching without requiring consumers of the component to wrap their application in a top-level `<Provider>`.
+
+Note that if you create a context using this utility, you will only be able to access it through hooks created with `createCustomHooks`.
+
+```js
+import { createCustomHooks, createContextValue } from 'react-redux'
+import store from './store'
+
+const customContext = React.createContext(createContextValue(store))
+const customHooks = createCustomHooks(() => React.useContext(customContext))
+
+export const Increment = () => {
+  const dispatch = customHooks.useDispatch()
+  return (
+    <button onClick={() => dispatch(increment())}>+1</button>
+  )
+}
+```
+
 ## Usage Warnings
 
 ### Stale Props and "Zombie Children"

@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { ReactReduxContext } from './Context'
-import Subscription from '../utils/Subscription'
+import { ReactReduxContext, createContextValue } from './Context'
 
 class Provider extends Component {
   constructor(props) {
@@ -9,14 +8,7 @@ class Provider extends Component {
 
     const { store } = props
 
-    this.notifySubscribers = this.notifySubscribers.bind(this)
-    const subscription = new Subscription(store)
-    subscription.onStateChange = this.notifySubscribers
-
-    this.state = {
-      store,
-      subscription
-    }
+    this.state = createContextValue(store)
 
     this.previousState = store.getState()
   }
@@ -42,14 +34,9 @@ class Provider extends Component {
   componentDidUpdate(prevProps) {
     if (this.props.store !== prevProps.store) {
       this.state.subscription.tryUnsubscribe()
-      const subscription = new Subscription(this.props.store)
-      subscription.onStateChange = this.notifySubscribers
-      this.setState({ store: this.props.store, subscription })
+      const newState = createContextValue(this.props.store)
+      this.setState(newState)
     }
-  }
-
-  notifySubscribers() {
-    this.state.subscription.notifyNestedSubs()
   }
 
   render() {

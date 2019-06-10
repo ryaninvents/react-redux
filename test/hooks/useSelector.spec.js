@@ -8,7 +8,9 @@ import {
   Provider as ProviderMock,
   useSelector,
   shallowEqual,
-  connect
+  connect,
+  createContextValue,
+  createCustomHooks
 } from '../../src/index.js'
 import { useReduxContext } from '../../src/hooks/useReduxContext'
 
@@ -48,6 +50,33 @@ describe('React', () => {
           })
 
           expect(result.current).toEqual(1)
+        })
+      })
+
+      describe('custom context', () => {
+        it('uses the correct context', () => {
+          const store2 = createStore(({ count } = { count: 1 }) => ({
+            count: count + 2
+          }))
+          const customContext = React.createContext(createContextValue(store2))
+          const customHooks = createCustomHooks(() =>
+            React.useContext(customContext)
+          )
+
+          const { result } = renderHook(
+            () => customHooks.useSelector(s => s.count),
+            {
+              wrapper: props => <ProviderMock {...props} store={store} />
+            }
+          )
+
+          expect(result.current).toEqual(3)
+
+          act(() => {
+            store2.dispatch({ type: '' })
+          })
+
+          expect(result.current).toEqual(5)
         })
       })
 
