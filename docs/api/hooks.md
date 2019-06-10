@@ -337,16 +337,19 @@ const InternalCount = () => {
   )
 }
 
-export const ReusableCounterComponent = () => {
+export const ReusableCounterComponent = ({ children }) => {
   return (
     <Provider context={customContext} store={customStore}>
       <div>
         <Increment /> <InternalCount />
+        {children}
       </div>
     </Provider>
   )
 }
 ```
+
+Note that consumers of your component will want any `children` to use the top-level application Store, not your Store. By creating a separate context, you will permit nested components to work as expected, instead of attaching to your component's store.
 
 ## `createContextValue`
 
